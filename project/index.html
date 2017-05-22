@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Cube</title>
+    <title>Kray-zee</title>
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
@@ -22,43 +22,95 @@
         
         document.body.appendChild(renderer.domElement); // Append the WebGL viewport to the DOM.
 
-        var geometry = new THREE.CubeGeometry(50, 8, 3); // Create a 20 by 20 by 20 cube.
-        var material = new THREE.MeshBasicMaterial({ color: 0x00d8ff }); // Skin the cube
-        var cube = new THREE.Mesh(geometry, material); // Create a mesh based on the specified geometry (cube) and material (blue skin).
-        var cube2 = new THREE.Mesh(geometry, material);
-        var cube3 = new THREE.Mesh(geometry, material);
-        var cube4 = new THREE.Mesh(geometry, material);
-        scene.add(cube, cube2); // Add the cube at (0, 0, 0).
-        cube2.rotation.y = 1.6;
+        var geometry = new THREE.CubeGeometry(5, 60, 5);
+        var material = new THREE.MeshBasicMaterial({ color: 0x00d8ff });
         
-        cube.position.x = -30;
-        cube2.position.x = -30;
+        var barsLeft = [];
+
+        for (var i = 0; i <= 15; ++i) {
+            barsLeft[i] = new THREE.Mesh(geometry, material);
+
+            barsLeft[i].position.z = -i*20;
+            barsLeft[i].position.x = -50;
+            
+            scene.add(barsLeft[i]);
+        }
         
-        scene.add(cube3, cube4); // Add the cube at (0, 0, 0).
-        cube4.rotation.y = 1.6;
+        var barsRight = [];
+
+        for (var i = 0; i <= 15; ++i) {
+            barsRight[i] = new THREE.Mesh(geometry, material);
+
+            barsRight[i].position.z = -i*20;
+            barsRight[i].position.x = 50;
+            
+            scene.add(barsRight[i]);
+        }
         
-        cube3.position.x = 30;
-        cube4.position.x = 30;
         
         camera.position.z = 50; // Move the camera away from the origin, down the positive z-axis.
         
-        var render = function () {
-            //cube.rotation.x += 0.03; // Rotate the sphere by a small amount about the x- and y-axes.
-            cube.rotation.y -= 0.03;
-            cube2.rotation.y -= 0.03;
-            cube.rotation.x -= 0.01;
-            cube2.rotation.x -= 0.01;
+        var render = function () {  
+            
+            for(var i = 0; i < barsLeft.length; i++)
+            {
+                if(barsLeft[i].position.z <= 50)
+                {
+                    barsLeft[i].position.z += 1;
+                }
+                else
+                {
+                    barsLeft[i].position.z = -200;
+                }
 
-            cube3.rotation.y -= 0.03;
-            cube4.rotation.y -= 0.03;
-            cube3.rotation.x += 0.01;
-            cube4.rotation.x += 0.01;
+                if(barsLeft[i].scale.y <= 0)
+                {
+                    var rand = Math.floor((Math.random() * 1.2) + 0.1);
+                    scaleY(barsLeft[i], rand);
+                }
+                else
+                {
+                    scaleY(barsLeft[i], barsLeft[i].scale.y-0.02);
+                }
+            }
+            
+            for(var i = 0; i < barsRight.length; i++)
+            {
+                if(barsRight[i].position.z <= 50)
+                {
+                    barsRight[i].position.z += 1;
+                }
+                else
+                {
+                    barsRight[i].position.z = -200;
+                }
 
+                if(barsRight[i].scale.y <= 0)
+                {
+                    var rand = Math.floor((Math.random() * 1.2) + 0.1);
+                    scaleY(barsRight[i], rand);
+                }
+                else
+                {
+                    scaleY(barsRight[i], barsRight[i].scale.y-0.02);
+                }
+            }
+            
             renderer.render(scene, camera); // Each time we change the position of the cube object, we must re-render it.
             requestAnimationFrame(render); // Call the render() function up to 60 times per second (i.e., up to 60 animation frames per second).
         };
 
         render(); // Start the rendering of the animation frames.
+        
+        function scaleY ( mesh, scale ) {
+            mesh.scale.y = scale ;
+            if( ! mesh.geometry.boundingBox ) mesh.geometry.computeBoundingBox();
+            var height = mesh.geometry.boundingBox.max.y - mesh.geometry.boundingBox.min.y;
+            //height is here the native height of the geometry
+            //that does not change with scaling. 
+            //So we need to multiply with scale again
+            mesh.position.y = height * scale / 2 - 20;
+        }
     </script>
 </body>
 </html>
