@@ -1,12 +1,34 @@
+@font-face { font-family: gothic; src: url('assets/LetterGothicStd.otf'); }
+
 html, body {
     margin: 0;
     padding: 0;
     text-align: center;
     overflow: hidden;
+    background-color: black;
 }
 
 canvas { 
     width: 100%; 
     height: 100%;
     border: 1px solid black;
+}
+
+input {
+    position: absolute;
+    color: white;
+    left: 45%;
+    top: 20%;
+    font-family: gothic;
+    opacity: 1;
+}
+
+#loading {
+    position: absolute;
+    top: 40%;
+    left: 20%;
+    color: white;
+    font-family: gothic;
+    font-size: 2vw;
+    opacity: 0;
 }
