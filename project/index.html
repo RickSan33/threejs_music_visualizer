@@ -10,9 +10,7 @@
 <body>
     <input type="file" name="fileInput" id="fileInput" accept="audio/*">
     
-    
     <div id="loading">Please wait<br>Calculating song tempo and preparing the experience</div>
-        
     
     <audio id="audio">
         <source id="mp3_src" src="assets/Rootkit%20-%20Good%202%20Go%20(feat.%20Tylor%20Maurer)%20%5BMonstercat%20Release%5D.mp3" />Your browser does not support the audio element.
@@ -36,6 +34,7 @@
         var fileInput = document.getElementById("fileInput");
         var files = [];
         var tempo;
+        var bpm;
 
         // when user has selected an audio file start calculating
         fileInput.onchange = function () 
@@ -82,8 +81,8 @@
 
             console.log(mt.tempo);
             
-            // covert tempo (BPM) to useable data for animation tempo
             tempo = mt.tempo / 100;
+            bpm = mt.tempo;
             
             // when music tempo has been succesfully calculated. place the song into the audio player.
             var file = files[0],
@@ -96,7 +95,7 @@
             
             // after calculating the tempo and placing the song into the audio player the animation can start
             $('#loading').css({left: '45%'});
-            $('#loading').html('Get Ready');
+            $('#loading').html('Get ready');
             $('#loading').animate({opacity: 0}, 5000, startAnimation);
         }        
         
@@ -138,12 +137,12 @@
 
             // init geometry mesh and material
             var bar = new THREE.CubeGeometry(5, 60, 5);
-            var lungs = new THREE.CubeGeometry(10, 80, 500);
-            var heart = new THREE.CubeGeometry(50, 10, 500);
+            var lungs = new THREE.CubeGeometry(30, 10, 2000);
+            var heart = new THREE.CubeGeometry(30, 10, 2000);
             
             var materialBar = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            var materialLungs = new THREE.MeshBasicMaterial({ color: 0x00a5e2 });
-            var materialHeart = new THREE.MeshBasicMaterial({ color: 0xc40000 });
+            var materialLungs = new THREE.MeshBasicMaterial({ color: 0x90e2ff });
+            var materialHeart = new THREE.MeshBasicMaterial({ color: 0xff7878 });
 
             // random degrees for cristal like spawning of equalizer
             var degrees = [10, -10, 0];
@@ -170,13 +169,23 @@
             
             // create heart and lungs
             LungLeft = new THREE.Mesh(lungs, materialLungs);
-            LungLeft.position.x = -35;
+            LungLeft.position.x = -40;
+            LungLeft.position.y = -40;
+            LungLeft.position.z = -50;
+            LungLeft.scale.x = 0.1;
             
             LungRight = new THREE.Mesh(lungs, materialLungs);
-            LungRight.position.x = 35;
+            LungRight.position.x = 40;
+            LungRight.position.y = -40;
+            LungRight.position.z = -50;            
+            LungRight.scale.x = 0.1;
             
             Heart = new THREE.Mesh(heart, materialHeart);
-
+            Heart.position.x = 0;
+            Heart.position.y = -40;
+            Heart.position.z = -50;
+            Heart.scale.x = 0.1;
+            
             scene.add(LungLeft, LungRight, Heart);
             
             // position camera backward
@@ -185,6 +194,11 @@
             
             // Depending on your age and level of physical fitness, a normal resting pulse ranges from 60 to 80 beats per minute. Your breathing rate is measured in a similar manner, with an average resting rate of 12 to 20 breaths per minute. Both your pulse and breathing rate increase with exercise, maintaining a ratio of approximately 1 breath for every 4 heartbeats.
             
+            //var msPerBeat = 1000 / (tempo / 60);
+            var BPS = Math.round(bpm / 60);
+            //var sPerBeat = 60 / tempo;
+            var secs = 0;
+            var expanded = false;
             
             // loop render frame
             var render = function () {  
@@ -198,7 +212,7 @@
                     }
                     else
                     {
-                        // make bars spawn cristal like
+                        // make bars spawn crystal like
                         var rand = Math.floor((Math.random() * 3) + 0);
                         barsLeft[i].rotation.z = degrees[rand];
                         barsLeft[i].position.z = -400;
@@ -223,12 +237,41 @@
 
                     scaleY(barsRight[i], frequencies[i]);
                 }
+                
+                if(secs >= 60)
+                {
+                    secs = 0;
+                }
+                
+                secs++;
+                
+                for(var i = 1; i < BPS+1; i++)
+                {
+                    if(secs == (60/BPS) * i)
+                    {
+                        if(expanded == false)
+                        {
+                            Heart.scale.x = 1;
+                            expanded = true;
+                        }
+                        else
+                        {
+                            Heart.scale.x = 0.1;
+                            expanded = false;
+                        }
+                    }
+                }
 
                 // render the scene
                 renderer.render(scene, camera);
 
-                // render again (loop)
-                requestAnimationFrame(render);
+                setTimeout( function() {
+                    
+                    // render again maintaining 60fps (loop)                    
+                    requestAnimationFrame(render);
+
+                }, 1000 / 60 );
+                
             };
 
             // start first render
@@ -258,6 +301,9 @@
             // start first audio analyse
             renderFrame();
 
+            
+            // android: Uncaught (in promise) DOMException: play() can only be initiated by a user gesture.
+            
             // start audio for analyser to analyse
             audio.play();
 
