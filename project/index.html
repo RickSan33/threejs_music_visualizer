@@ -140,9 +140,72 @@
             var lungs = new THREE.CubeGeometry(30, 10, 2000);
             var heart = new THREE.CubeGeometry(30, 10, 2000);
             
-            var materialBar = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            var materialLungs = new THREE.MeshBasicMaterial({ color: 0x90e2ff });
-            var materialHeart = new THREE.MeshBasicMaterial({ color: 0xff7878 });
+            
+//            dub/reggae: 60-90 bpm
+//            downtempo/chillout: 90-120 bpm
+//            deep house: 120-125 bpm
+//            house: 120-130 bpm
+//            tech house: 120-130 bpm
+//            electro house: 125-130 bpm
+//            progressive house: 125-130 bpm
+//            trance: 130-135 bpm
+//            dubstep: 130-145 bpm
+//            techno: 130-150 bpm
+//            hard house: 145-150 bpm
+//            jungle: 155-180 bpm
+//            drum and bass: 165-185 bpm
+//            hardcore/gabber: 160-200 bpm
+            
+            var colorBar;
+            var colorHeart;
+            var colorLungs;
+            
+            // reggae
+            if(bpm < 90)
+            {
+                colorBar = 0x27ae60;
+                colorHeart = 0x1abc9c;
+                colorLungs = 0x2ecc71;
+            }
+            // chill
+            else if(bpm > 90 && bpm < 120)
+            {
+                colorBar = 0xecf0f1;
+                colorHeart = 0xbdc3c7;
+                colorLungs = 0x2c3e50;
+            }
+            // house
+            else if(bpm > 120 && bpm < 130)
+            {
+                colorBar = 0x16a085;
+                colorHeart = 0xe74c3c;
+                colorLungs = 0x9b59b6;
+            }
+            // trance
+            else if(bpm > 130 && bpm < 150)
+            {
+                colorBar = 0x3498db;
+                colorHeart = 0x9b59b6;
+                colorLungs = 0x2980b9;
+            }
+            // drum and bass/electro
+            else if(bpm > 150 && bpm < 180)
+            {
+                colorBar = 0xf1c40f;
+                colorHeart = 0xf39c12;
+                colorLungs = 0xe67e22;
+            }
+            // hardcore
+            else if(bpm > 180)
+            {
+                colorBar = 0x34495e;
+                colorHeart = 0x7f8c8d;
+                colorLungs = 0x2c3e50;
+            }
+
+            var materialBar = new THREE.MeshBasicMaterial({ color: colorBar });
+            var materialLungs = new THREE.MeshBasicMaterial({ color: colorHeart });
+            var materialHeart = new THREE.MeshBasicMaterial({ color: colorLungs });
 
             // random degrees for cristal like spawning of equalizer
             var degrees = [10, -10, 0];
@@ -172,13 +235,13 @@
             LungLeft.position.x = -40;
             LungLeft.position.y = -40;
             LungLeft.position.z = -50;
-            LungLeft.scale.x = 0.1;
+            LungLeft.scale.x = 1;
             
             LungRight = new THREE.Mesh(lungs, materialLungs);
             LungRight.position.x = 40;
             LungRight.position.y = -40;
             LungRight.position.z = -50;            
-            LungRight.scale.x = 0.1;
+            LungRight.scale.x = 1;
             
             Heart = new THREE.Mesh(heart, materialHeart);
             Heart.position.x = 0;
@@ -199,6 +262,7 @@
             //var sPerBeat = 60 / tempo;
             var secs = 0;
             var expanded = false;
+            var beats = 0;
             
             // loop render frame
             var render = function () {  
@@ -238,13 +302,15 @@
                     scaleY(barsRight[i], frequencies[i]);
                 }
                 
+                // make the heart pump
                 if(secs >= 60)
                 {
                     secs = 0;
                 }
                 
-                secs++;
-                
+                secs++;             
+                                
+                // (prototype) raw conversion of BPM to heartbeats per second
                 for(var i = 1; i < BPS+1; i++)
                 {
                     if(secs == (60/BPS) * i)
@@ -253,6 +319,22 @@
                         {
                             Heart.scale.x = 1;
                             expanded = true;
+                            
+                            // make the lungs breath
+                            if(beats > 3)
+                            {
+                                LungLeft.scale.x = 1;
+                                LungRight.scale.x = 1;
+                                beats = 0;
+                            }
+
+                            else
+                            {
+                                LungLeft.scale.x -= 0.3;
+                                LungRight.scale.x -= 0.3;
+                            }
+
+                            beats++;
                         }
                         else
                         {
