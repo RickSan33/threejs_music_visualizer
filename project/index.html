@@ -19,7 +19,10 @@
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
     <script src="music-tempo-master/dist/browser/music-tempo.min.js"></script>
     <script src="https://rawgithub.com/mrdoob/three.js/master/build/three.js"></script>
-    <script>
+    <script src="VRWeatherParticles-master/js/StereoEffect.js"></script>
+    <script src="VRWeatherParticles-master/js/DeviceOrientationControls.js"></script>
+    <script src="VRWeatherParticles-master/js/OrbitControls.js"></script>
+    <script>        
         // check if webaudiokit is available
         window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
         
@@ -126,20 +129,52 @@
             // make camera for scene and position it
             var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000); 
 
-            // check if webGL rendering is available
-            var renderer = window.WebGLRenderingContext ? new THREE.WebGLRenderer() : new THREE.CanvasRenderer();
+            // position camera and add to scene
+            camera.position.set(0, 0, 50);
+            scene.add(camera);
+            
+            // create renderer
+            var renderer = new THREE.WebGLRenderer();
+            var element = renderer.domElement;
+            
+            // append renderer
+            document.body.appendChild(element);
 
             // set rendersize to fullscreen
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(window.innerWidth, window.innerHeight);            
+            
+            var effect = new THREE.StereoEffect(renderer);
+            
+            // create orbit controls if orientation controls are not available
+            var controls = new THREE.OrbitControls(camera, element);
+            controls.target.set(
+              camera.position.x + 0.15,
+              camera.position.y,
+              camera.position.z
+            );
+            controls.noPan = true;
+            controls.noZoom = true;
+            
+            // Our preferred controls via DeviceOrientation
+            function setOrientationControls(e) {
+              if (!e.alpha) {
+                return;
+              }
 
-            // init renderer
-            document.body.appendChild(renderer.domElement);
+              controls = new THREE.DeviceOrientationControls(camera, true);
+              controls.connect();
+              controls.update();
+
+              element.addEventListener('click', fullscreen, false);
+
+              window.removeEventListener('deviceorientation', setOrientationControls, true);
+            }
+            window.addEventListener('deviceorientation', setOrientationControls, true);
 
             // init geometry mesh and material
             var bar = new THREE.CubeGeometry(5, 60, 5);
             var lungs = new THREE.CubeGeometry(30, 10, 2000);
             var heart = new THREE.CubeGeometry(30, 10, 2000);
-            
             
 //            dub/reggae: 60-90 bpm
 //            downtempo/chillout: 90-120 bpm
@@ -250,9 +285,6 @@
             Heart.scale.x = 0.1;
             
             scene.add(LungLeft, LungRight, Heart);
-            
-            // position camera backward
-            camera.position.z = 50;
 
             
             // Depending on your age and level of physical fitness, a normal resting pulse ranges from 60 to 80 beats per minute. Your breathing rate is measured in a similar manner, with an average resting rate of 12 to 20 breaths per minute. Both your pulse and breathing rate increase with exercise, maintaining a ratio of approximately 1 breath for every 4 heartbeats.
@@ -264,8 +296,10 @@
             var expanded = false;
             var beats = 0;
             
+            var clock = new THREE.Clock();
+            
             // loop render frame
-            var render = function () {  
+            function animate() {  
 
                 for(var i = 0; i < barsLeft.length; i++)
                 {
@@ -345,23 +379,61 @@
                 }
 
                 // render the scene
-                renderer.render(scene, camera);
+                //renderer.render(scene, camera);
 
                 setTimeout( function() {
                     
                     // render again maintaining 60fps (loop)                    
-                    requestAnimationFrame(render);
+                    requestAnimationFrame(animate);
+                    
+                    update(clock.getDelta());
+                    render(clock.getDelta());
 
                 }, 1000 / 60 );
                 
             };
 
             // start first render
-            render();
+            animate();
+            
+            function resize() {
+                var width = window.innerWidth;
+                var height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(width, height);
+                effect.setSize(width, height);
+            }
+            
+            function update(dt) {
+                resize();
+
+                camera.updateProjectionMatrix();
+
+                controls.update(dt);
+            }
+
+            function render(dt) {
+                effect.render(scene, camera);
+            }
+            
+            function fullscreen() {
+                if (document.body.requestFullscreen) {
+                  document.body.requestFullscreen();
+                } else if (document.body.msRequestFullscreen) {
+                  document.body.msRequestFullscreen();
+                } else if (document.body.mozRequestFullScreen) {
+                  document.body.mozRequestFullScreen();
+                } else if (document.body.webkitRequestFullscreen) {
+                  document.body.webkitRequestFullscreen();
+                }
+            }
 
 
             // loop music analyser
-            function renderFrame() 
+            function renderAudio() 
             {
                 // init music analyser data
                 var array = new Uint8Array(analyser.frequencyBinCount);
@@ -377,11 +449,11 @@
                 }
 
                 // analyse audio again (loop)
-                requestAnimationFrame(renderFrame);
+                requestAnimationFrame(renderAudio);
             }
 
             // start first audio analyse
-            renderFrame();
+            renderAudio();
 
             
             // android: Uncaught (in promise) DOMException: play() can only be initiated by a user gesture.
